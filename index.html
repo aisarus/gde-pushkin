@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Где Пушкин?</title>
+<meta name="description" content="10 пар стихотворных отрывков: настоящий ранний Пушкин и подделка нейросети. Угадаете, где Пушкин?">
+<meta property="og:title" content="Где Пушкин?">
+<meta property="og:description" content="Отличите настоящего Пушкина от стихов нейросети Claude.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Бумага и чернила: одна колонка, стихи — серифом, интерфейс — гротеском */
+:root {
+  --paper: #f7f3ea; --card: #fdfbf6; --ink: #1d2230; --muted: #5d6474; --line: #ddd5c5;
+  --accent: #2b4a7e; --accent-soft: #e4e9f3; --good: #2f6b45; --bad: #9b3b2f;
+  --serif: "PT Serif", Georgia, "Times New Roman", serif; --sans: "PT Sans", system-ui, -apple-system, Segoe UI, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --paper: #171a21; --card: #1e222b; --ink: #ece6d9; --muted: #a9a294; --line: #343a46;
+    --accent: #9db6e4; --accent-soft: #263248; --good: #7fc79a; --bad: #e39b8f; color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 17px/1.55 var(--sans); }
+main { max-width: 56rem; margin: 0 auto; padding: 40px max(16px, env(safe-area-inset-left, 0px)) 24px max(16px, env(safe-area-inset-right, 0px)); }
+h1 { font: 700 clamp(2.4rem, 7vw, 3.6rem)/1.1 var(--serif); margin: 0; text-wrap: balance; }
+h2 { font: 700 1.6rem/1.2 var(--serif); margin: 2.5rem 0 1rem; }
+.rule { width: 4rem; height: 1px; background: var(--accent); margin: .9rem 0 1.6rem; }
+.lead { font: 1.12rem/1.65 var(--serif); max-width: 38rem; }
+fieldset { border: 0; padding: 0; margin: 2rem 0 0; max-width: 38rem; }
+legend { font-weight: 700; font-size: 1.1rem; margin-bottom: .8rem; }
+.opt { display: flex; gap: .7rem; align-items: flex-start; border: 1px solid var(--line); border-radius: 3px; padding: .75rem 1rem; margin-bottom: .5rem; cursor: pointer; }
+.opt:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.opt input { margin-top: .35rem; accent-color: var(--accent); }
+button { font: 700 1rem var(--sans); border-radius: 3px; cursor: pointer; padding: .8rem 1.5rem; }
+button:focus-visible, .opt:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.primary { background: var(--accent); color: var(--paper); border: 1px solid var(--accent); }
+.primary:disabled { opacity: .4; cursor: not-allowed; }
+.ghost { background: transparent; color: var(--accent); border: 1px solid var(--accent); font-weight: 400; }
+.progress { display: flex; justify-content: space-between; align-items: center; gap: 1rem; color: var(--muted); font-size: .85rem; letter-spacing: .08em; text-transform: uppercase; }
+.bar { width: 8rem; height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1.8rem; }
+@media (max-width: 720px) { .pair { grid-template-columns: 1fr; } }
+.side { display: flex; flex-direction: column; gap: .7rem; min-width: 0; }
+.card { flex: 1; background: var(--card); border: 1px solid var(--line); border-radius: 3px; padding: 1.4rem 1.6rem; }
+.label { font: 700 1.5rem var(--serif); color: var(--accent); }
+.verse { font: 1.08rem/1.8 var(--serif); white-space: pre-line; margin: .6rem 0 0; }
+.side .ghost { width: 100%; }
+.stats { list-style: none; padding: 0; margin: 1.5rem 0 0; max-width: 34rem; }
+.stats li { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; border-bottom: 1px solid var(--line); padding: .5rem 0; }
+.stats span:last-child { color: var(--muted); font-variant-numeric: tabular-nums; }
+.row { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 1.6rem; }
+.note { color: var(--muted); font-size: .9rem; margin-top: .6rem; }
+.reveal { list-style: none; padding: 0; margin: 0; }
+.reveal > li { border-top: 1px solid var(--line); padding: 1.2rem 0; }
+.reveal .head { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; font-size: .85rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.good { color: var(--good); font-weight: 700; } .bad { color: var(--bad); font-weight: 700; }
+.mini { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: .8rem; }
+@media (max-width: 720px) { .mini { grid-template-columns: 1fr; } }
+.mini > div { border: 1px solid var(--line); border-radius: 3px; padding: .9rem 1rem; min-width: 0; }
+.mini > div.chosen { border-color: var(--accent); }
+.mini .who { font-size: .9rem; }
+.mini .verse { font-size: .92rem; line-height: 1.6; }
+input.url { width: 100%; max-width: 28rem; font: .95rem var(--sans); padding: .5rem .7rem; border: 1px solid var(--line); border-radius: 3px; background: var(--card); color: var(--ink); margin-top: .7rem; }
+footer { max-width: 56rem; margin: 2rem auto 0; padding: 1.2rem max(16px, env(safe-area-inset-left, 0px)) 2rem max(16px, env(safe-area-inset-right, 0px)); border-top: 1px solid var(--line); color: var(--muted); font-size: .82rem; line-height: 1.6; }
+[hidden] { display: none !important; }
+@media (prefers-reduced-motion: no-preference) { .bar i { transition: width .3s; } }
+</style>
+</head>
+<body>
+<main id="app"></main>
+<footer>Тексты Пушкина — общественное достояние. Подделки написаны нейросетью Claude (Anthropic). Анонимно: сохраняются только ответы и уровень знания поэзии. Это зеркало теста <a href="https://gde-pushkin.lovable.app">gde-pushkin.lovable.app</a> для тех, у кого он не открывается.</footer>
+<script>
+const PAIRS = [{"id": 1, "pushkin_title": "«Юрьеву» («Любимец ветреных Лаис…», 1821)", "real": "Любимец ветреных Лаис,\nПрелестный баловень Киприды —\nУмей сносить, мой Адонис,\nЕе минутные обиды!\nОна дала красы младой\nТебе в удел очарованье,\nИ черный ус, и взгляд живой,\nЛюбви улыбку и молчанье.", "fake": "Питомец резвых аонид,\nПовеса, друг мой легкокрылый!\nТебя ли сплин отяготит?\nТебе ли мил приют унылый?\nПускай Фортуна за столом\nТебе вчера не улыбнулась:\nНо Вакх с тобой, и полон дом\nДрузей — и радость к нам вернулась."}, {"id": 2, "pushkin_title": "«На тихих берегах Москвы…» (1822)", "real": "На тихих берегах Москвы\nЦерквей, венчанные крестами,\nСияют ветхие главы\nНад монастырскими стенами.\nКругом простерлись по холмам\nВовек не рубленные рощи,\nИздавна почивают там\nУгодника святые мощи.", "fake": "Близ Пскова, в тишине полей,\nПод сенью липовой аллеи\nБелеет церковь меж ветвей,\nГде спит смиренно Пелагея.\nТам в праздник с ближних деревень\nНарод стекается толпою,\nИ долго длится летний день\nНад этой тихою землею."}, {"id": 3, "pushkin_title": "«К бюсту завоевателя» (1829)", "real": "Напрасно видишь тут ошибку:\nРука искусства навела\nНа мрамор этих уст улыбку,\nА гнев на хладный лоск чела.\nНедаром лик сей двуязычен.\nТаков и был сей властелин:\nК противочувствиям привычен,\nВ лице и в жизни арлекин.", "fake": "Не диво, что в его портрете\nСмеется рот, а взор суров:\nТаков он был и в кабинете,\nИ в зале, полной орденов.\nОн с нами — ласков и приветлив,\nС просителем — сердит и строг;\nХудожник был весьма приметлив\nИ угодить обоим смог."}, {"id": 4, "pushkin_title": "«Аквилон» (1824)", "real": "Зачем ты, грозный аквилон,\nТростник прибрежный долу клонишь?\nЗачем на дальний небосклон\nТы облачко столь гневно гонишь?\nНедавно черных туч грядой\nСвод неба глухо облекался,\nНедавно дуб над высотой\nВ красе надменной величался...", "fake": "Куда стремишься, вал морской,\nСедою пеною клубяся?\nЗачем с угрюмою тоской\nТы бьешься в берег, разбиваясь?\nНе так ли в юности моей\nКипели страсти безрассудно\nИ о гранит холодных дней\nДробились пылью изумрудной?"}, {"id": 5, "pushkin_title": "«Делибаш» (1829)", "real": "Перестрелка за холмами;\nСмотрит лагерь их и наш;\nНа холме пред казаками\nВьется красный делибаш.\nДелибаш! не суйся к лаве,\nПожалей свое житье;\nВмиг аминь лихой забаве:\nПопадешься на копье.", "fake": "За рекой костры дымятся;\nСпит в тумане стан чужой;\nНам с рассветом в бой подняться,\nНынче — чарка да покой.\nЕсаул, налей полнее!\nЗавтра, может, нам не пить:\nПуля-дура всех вернее\nЗнает, как кого ловить."}, {"id": 6, "pushkin_title": "«Был и я среди донцов…» (1829)", "real": "Был и я среди донцов,\nГнал и я османов шайку;\nВ память битвы и шатров\nЯ домой привез нагайку.\nНа походе, на войне\nСохранил я балалайку —\nС нею рядом, на стене\nЯ повешу и нагайку.", "fake": "Видел я Казбек седой,\nПил чихирь в грузинской сакле\nИ вернулся я домой,\nКак актер в пустом спектакле.\nСабля, бурка да кинжал\nНад моей висят постелью;\nЯ бы с ними поскакал,\nДа сижу за канителью."}, {"id": 7, "pushkin_title": "«Ответ А. И. Готовцевой» (1829)", "real": "И недоверчиво и жадно\nСмотрю я на твои цветы.\nКто, строгий стоик, примет хладно\nПривет харит и красоты?\nГоржуся им — но и робею;\nТвой недосказанный упрек\nЯ разгадать вполне не смею.\nТвой гнев ужели я навлек?", "fake": "Благодарю: в твоем посланье\nЯ слышу ласку и укор.\nМне сладко это порицанье,\nКак нежный тайный разговор.\nНе я ль виной твоей печали?\nНе я ль забыл твой скромный дом?\nПрости! меня в столицу звали\nДолги, журналы — и Содом."}, {"id": 8, "pushkin_title": "«Наперсница волшебной старины…» (1822)", "real": "Наперсница волшебной старины,\nДруг вымыслов игривых и печальных,\nТебя я знал во дни моей весны,\nВо дни утех и снов первоначальных.\nЯ ждал тебя; в вечерней тишине\nЯвлялась ты веселою старушкой,\nИ надо мной сидела в шушуне,\nВ больших очках и с резвою гремушкой.", "fake": "Знакомый сад! в твоей густой тени\nЯ рос, мечтатель резвый и беспечный;\nЗдесь протекли младенческие дни\nПод шепот лип и ропот речки вечный.\nЗдесь в первый раз, в тени у родника,\nЯ развернул заветные тетради,\nИ робкая, неопытна рука\nЧертила стих — забавы музы ради."}, {"id": 9, "pushkin_title": "«Дева» (1821)", "real": "Я говорил тебе: страшися девы милой!\nЯ знал, она сердца влечет невольной силой.\nНеосторожный друг! я знал, нельзя при ней\nИную замечать, иных искать очей.\nНадежду потеряв, забыв измены сладость,\nПылает близ нее задумчивая младость;\nЛюбимцы счастия, наперсники Судьбы\nСмиренно ей несут влюбленные мольбы;", "fake": "Не верь, мой юный друг, улыбке томной, лживой!\nНе верь ее очам и речи шаловливой:\nОна играет всем — и вздохом, и слезой,\nИ сердцем, и судьбой, и бедною тобой.\nВчера она со мной, склонясь над фортепьяно,\nШептала мне слова из нового романа;\nА нынче, говорят, на бале у князей\nТем самым шепотом пленяла двух гостей."}, {"id": 10, "pushkin_title": "«Иностранке» (1822)", "real": "На языке тебе невнятном\nСтихи прощальные пишу,\nНо в заблуждении приятном\nВниманья твоего прошу:\nМой друг, доколе не увяну,\nВ разлуке чувство погубя,\nБоготворить не перестану\nТебя, мой друг, одну тебя.", "fake": "Листок, исписанный небрежно,\nТебе на память я дарю:\nПусть он тебе напомнит нежно\nПоследний вечер и зарю.\nКогда в краю твоем далеком\nТебя рассеет шумный свет,\nВзгляни сюда — и ненароком\nВздохни о том, кого уж нет."}];
+// Хранилище — Google-форма владельца: отправка «вслепую» (no-cors), ответ не читается.
+const FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSdAfatM2kh-1vSV0Iy72AA88NEHe22pVPJyyS3i6GhfgMYaqw/formResponse';
+const FIELD = 'entry.1606822397';
+// Снимок общего подсчёта: зеркало не читает базу, цифры обновляются вручную.
+const SNAPSHOT = { label: 'Средний счёт первых 50 участников', avg: 4.6 };
+const DONE_KEY = 'where-pushkin-done';
+const EXPERTISE = [
+  ['casual', 'Читаю стихи редко'],
+  ['lover', 'Люблю стихи, читаю для себя'],
+  ['expert', 'Профессионально: филолог, учитель литературы, пишу стихи'],
+];
+const app = document.getElementById('app');
+let state = { expertise: null, items: [], index: 0, answers: [], started: 0, pairStart: 0 };
+
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function store(get, value) { try { return get ? localStorage.getItem(DONE_KEY) === '1' : localStorage.setItem(DONE_KEY, '1'); } catch (e) { return false; } }
+
+function intro() {
+  app.innerHTML = `
+    <h1>Где Пушкин?</h1><div class="rule"></div>
+    <p class="lead">Перед вами 10 пар стихотворных отрывков по восемь строк. В каждой паре один отрывок — настоящий Пушкин, малоизвестные ранние стихи. Второй написала нейросеть Claude тем же размером и с той же рифмовкой. Выберите, где Пушкин. Ответы анонимны и идут в общий подсчёт: мы проверяем, отличают ли читатели Пушкина от машины.</p>
+    <fieldset><legend>Как хорошо вы знаете поэзию?</legend>
+      ${EXPERTISE.map(([v, l]) => `<label class="opt"><input type="radio" name="exp" id="exp-${v}" value="${v}" ${state.expertise === v ? 'checked' : ''}><span>${l}</span></label>`).join('')}
+    </fieldset>
+    <div class="row"><button class="primary" id="start" ${state.expertise ? '' : 'disabled'}>Начать</button></div>`;
+  app.querySelectorAll('input[name=exp]').forEach(r => r.addEventListener('change', () => { state.expertise = r.value; app.querySelector('#start').disabled = false; }));
+  app.querySelector('#start').addEventListener('click', start);
+}
+
+function start() {
+  state.items = shuffle(PAIRS).map(pair => ({ pair, realSide: Math.random() < 0.5 ? 'A' : 'B' }));
+  state.index = 0; state.answers = []; state.started = Date.now(); state.pairStart = Date.now();
+  pairView(); scrollTo(0, 0);
+}
+
+function pairView() {
+  const { pair, realSide } = state.items[state.index];
+  const text = side => esc(side === realSide ? pair.real : pair.fake);
+  app.innerHTML = `
+    <div class="progress"><span>Пара ${state.index + 1} из ${state.items.length}</span><span class="bar"><i style="width:${state.index / state.items.length * 100}%"></i></span></div>
+    <div class="pair">${['A', 'B'].map(s => `
+      <div class="side"><article class="card"><div class="label">${s === 'A' ? 'А' : 'Б'}</div><p class="verse">${text(s)}</p></article>
+      <button class="ghost" data-side="${s}">Это Пушкин</button></div>`).join('')}</div>`;
+  app.querySelectorAll('[data-side]').forEach(b => b.addEventListener('click', () => choose(b.dataset.side)));
+}
+
+function choose(side) {
+  const item = state.items[state.index], now = Date.now();
+  state.answers.push({ pair_id: item.pair.id, position: state.index + 1, real_side: item.realSide, chosen: side,
+                       correct: side === item.realSide, ms: now - state.pairStart });
+  state.pairStart = now;
+  if (++state.index < state.items.length) { pairView(); scrollTo(0, 0); } else { finish(); }
+}
+
+function finish() {
+  const score = state.answers.filter(a => a.correct).length;
+  const payload = { source: 'mirror', expertise: state.expertise, score, answers: state.answers,
+                    duration_ms: Date.now() - state.started, is_repeat: store(true) };
+  const body = new URLSearchParams({ [FIELD]: JSON.stringify(payload) });
+  fetch(FORM, { method: 'POST', mode: 'no-cors', body }).then(() => store(false)).catch(() => {
+    const n = document.getElementById('save-note'); if (n) n.hidden = false;
+  });
+  results(score); scrollTo(0, 0);
+}
+
+function results(score) {
+  const url = location.origin + location.pathname;
+  app.innerHTML = `
+    <h1>Вы угадали ${score} из 10.</h1>
+    <p class="note" id="save-note" hidden>Не удалось сохранить ответ, но ваш результат здесь.</p>
+    <ul class="stats"><li><span>${SNAPSHOT.label}</span><span>${String(SNAPSHOT.avg).replace('.', ',')} из 10</span></li>
+      <li><span>Наугад</span><span>5 из 10</span></li></ul>
+    <div class="row"><button class="primary" id="copy">Скопировать ссылку</button><button class="ghost" id="again">Пройти ещё раз</button></div>
+    <p class="note" id="copied" hidden>Ссылка скопирована.</p>
+    <input class="url" id="url" value="${esc(url)}" readonly hidden>
+    <h2>Ответы</h2>
+    <ol class="reveal">${state.items.map((item, i) => {
+      const a = state.answers[i];
+      return `<li><div class="head"><span>Пара ${i + 1}</span><span class="${a.correct ? 'good' : 'bad'}">${a.correct ? 'Угадали' : 'Не угадали'}</span></div>
+        <div class="mini">${['A', 'B'].map(s => {
+          const real = s === item.realSide;
+          return `<div class="${a.chosen === s ? 'chosen' : ''}"><div class="who"><b>${s === 'A' ? 'А' : 'Б'}</b> · ${real ? '<b>Пушкин — ' + esc(item.pair.pushkin_title) + '</b>' : 'Claude'}${a.chosen === s ? ' · ваш выбор' : ''}</div>
+            <p class="verse">${esc(real ? item.pair.real : item.pair.fake)}</p></div>`;
+        }).join('')}</div></li>`;
+    }).join('')}</ol>`;
+  app.querySelector('#again').addEventListener('click', () => { intro(); scrollTo(0, 0); });
+  app.querySelector('#copy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(url); app.querySelector('#copied').hidden = false; }
+    catch (e) { const u = app.querySelector('#url'); u.hidden = false; u.focus(); u.select(); }
+  });
+}
+
+intro();
+</script>
+</body>
+</html>
